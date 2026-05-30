@@ -1,0 +1,43 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - .github/workflows/*
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Get version
+        id: version
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: 'plugin.json'
+          prop_path: 'Version'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -t lib
+          zip -r FMHY-Search-${{steps.version.outputs.prop}}.zip . \
+            -x '*.git*' -x 'tests/*' -x 'docs/*' -x '*.pytest_cache*' \
+            -x '*__pycache__*' -x 'requirements-dev.txt' -x '.gitignore'
+
+      - name: Publish
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 'FMHY-Search-${{steps.version.outputs.prop}}.zip'
+          tag_name: 'v${{steps.version.outputs.prop}}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
