@@ -6,7 +6,7 @@
     "Author": "iamshamit",
     "Version": "1.0.0",
     "Language": "python",
-    "Website": "https://fmhy.net",
+    "Website": "https://github.com/iamshamit/fmhy-search-flow-launcher",
     "IcoPath": "icons\\fmhy.png",
     "ExecuteFileName": "main.py"
 }
