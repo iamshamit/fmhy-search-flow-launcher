@@ -163,8 +163,11 @@ FMHY Search/
 
 ## Building a Release Zip
 
+The release is built automatically by `.github/workflows/Publish Release.yml` on every push to `master`, using `windows-latest` and Python 3.11 so the bundled wheels match the embedded CPython that Flow Launcher ships. To build locally:
+
 ```bat
+rmdir /s /q lib
 pip install -r requirements.txt -t lib\
 ```
 
-Zip the plugin folder excluding `.git\`, `tests\`, `docs\`, and `requirements-dev.txt`. Submit the zip to the Flow Launcher plugin store.
+Then zip the folder (excluding `.git\`, `tests\`, `docs\`, `data\`, `__pycache__\`, and `requirements-dev.txt`) and submit to the Flow Launcher plugin store.

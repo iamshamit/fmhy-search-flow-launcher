@@ -9,7 +9,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     permissions:
       contents: write
 
@@ -28,12 +28,23 @@ jobs:
           path: 'plugin.json'
           prop_path: 'Version'
 
-      - name: Install dependencies
+      - name: Install bundled dependencies
+        shell: pwsh
         run: |
-          pip install -r requirements.txt -t lib
-          zip -r FMHY-Search-${{steps.version.outputs.prop}}.zip . \
-            -x '*.git*' -x 'tests/*' -x 'docs/*' -x '*.pytest_cache*' \
-            -x '*__pycache__*' -x 'requirements-dev.txt' -x '.gitignore'
+          if (Test-Path lib) { Remove-Item -LiteralPath lib -Recurse -Force }
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -t lib
+          Get-ChildItem -Path lib -Recurse -Directory -Filter '__pycache__' |
+            Remove-Item -Recurse -Force
+
+      - name: Zip plugin
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.prop }}"
+          $zip = "FMHY-Search-$version.zip"
+          if (Test-Path $zip) { Remove-Item -LiteralPath $zip -Force }
+          Compress-Archive -Path main.py, plugin.json, src, icons, lib -DestinationPath $zip -Force
+          Get-Item $zip
 
       - name: Publish
         if: success()
