@@ -87,12 +87,14 @@ def search(
         processor=utils.default_process,
     )
 
-    # Title hits first, then search_text hits not already found
+    # Title hits first (score order), then search_text hits not already found
     ordered = [pool[idx] for _, _, idx in title_matches]
     ordered += [pool[idx] for _, _, idx in text_matches if idx not in seen]
 
-    # Re-rank: starred English → unstarred English → non-English (stable sort preserves score order within groups)
-    ordered.sort(key=lambda e: (_is_non_english(e), not e.get("starred", False)))
+    # Only push non-English to the bottom; keep rapidfuzz score order for everything else
+    # (starred re-ranking would override score, causing high-confidence unstarred matches
+    # like FlowLauncher to fall behind low-confidence starred ones like Niagara Launcher)
+    ordered.sort(key=lambda e: _is_non_english(e))
     return ordered[:limit]
 
 
