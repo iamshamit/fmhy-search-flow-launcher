@@ -11,7 +11,7 @@ from flowlauncher import FlowLauncher
 from flowlauncher import FlowLauncherAPI
 
 from src.cache import load_json, INDEX_FILE, get_logger
-from src.search import search, parse_cat_query, _is_non_english
+from src.search import search, keyword_search, parse_cat_query, _is_non_english
 from src.updater import build_index, should_check_rss, check_and_update_background
 from src.commands import (
     get_random_entry, get_latest_entries,
@@ -178,14 +178,24 @@ class FMHYSearch(FlowLauncher):
                 ]
             return [self._make_result(e) for e in pool[:20]]
 
-        results = search(search_query, entries, category_filter=cat_filter)
+        if fuzzy:
+            results = search(search_query, entries, category_filter=cat_filter)
+        else:
+            results = keyword_search(search_query, entries, category_filter=cat_filter)
         if results:
             add_history(query)
 
         if not results:
-            return [{"Title": f"No results for '{query}'",
-                     "SubTitle": "Try different keywords or run 'fmhy update'",
-                     "IcoPath": ICON}]
+            if fuzzy:
+                return [{"Title": f"No results for '{search_query}'",
+                         "SubTitle": "Try different keywords or run 'fmhy update'",
+                         "IcoPath": ICON}]
+            return [{
+                "Title": f"No results for '{search_query}' — press Enter to try fuzzy search",
+                "SubTitle": "Searches with typo tolerance",
+                "IcoPath": ICON,
+                "JsonRPCAction": {"method": "fuzzy_rewrite", "parameters": [query]},
+            }]
         return [self._make_result(e) for e in results]
 
     def context_menu(self, data: list) -> list:
@@ -311,6 +321,9 @@ class FMHYSearch(FlowLauncher):
 
     def rerun_history(self, term: str):
         FlowLauncherAPI.change_query(term, requery=True)
+
+    def fuzzy_rewrite(self, raw_query: str):
+        FlowLauncherAPI.change_query(raw_query.rstrip("?") + "?", requery=True)
 
     def _cmd_favorites(self):
         favs = get_favorites()
