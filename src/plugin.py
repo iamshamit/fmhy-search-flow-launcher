@@ -193,7 +193,7 @@ class FMHYSearch(FlowLauncher):
         cat_filter, search_query, fuzzy = parse_cat_query(query)
 
         if not search_query:
-            if query.startswith("cat:") and " " not in query[4:]:
+            if query.startswith("cat:") and " " not in query[4:] and not fuzzy:
                 return self._cmd_cat_picker(query[4:].rstrip("?"), entries)
             pool = entries
             if cat_filter:
@@ -210,7 +210,7 @@ class FMHYSearch(FlowLauncher):
         else:
             results = keyword_search(search_query, entries, category_filter=cat_filter)
         if results:
-            add_history(query)
+            add_history(query.rstrip("?"))
 
         if not results:
             if fuzzy:
