@@ -53,23 +53,57 @@ def test_search_limit_respected():
 
 def test_parse_cat_query_with_prefix():
     from src.search import parse_cat_query
-    cat, q = parse_cat_query("cat:anime naruto streaming")
+    cat, q, fuzzy = parse_cat_query("cat:anime naruto streaming")
     assert cat == "anime"
     assert q == "naruto streaming"
+    assert fuzzy is False
 
 
 def test_parse_cat_query_without_prefix():
     from src.search import parse_cat_query
-    cat, q = parse_cat_query("torrent client")
+    cat, q, fuzzy = parse_cat_query("torrent client")
     assert cat is None
     assert q == "torrent client"
+    assert fuzzy is False
 
 
 def test_parse_cat_query_cat_only():
     from src.search import parse_cat_query
-    cat, q = parse_cat_query("cat:music")
+    cat, q, fuzzy = parse_cat_query("cat:music")
     assert cat == "music"
     assert q == ""
+    assert fuzzy is False
+
+
+def test_parse_cat_query_fuzzy_suffix():
+    from src.search import parse_cat_query
+    cat, q, fuzzy = parse_cat_query("torrents?")
+    assert cat is None
+    assert q == "torrents"
+    assert fuzzy is True
+
+
+def test_parse_cat_query_cat_and_fuzzy():
+    from src.search import parse_cat_query
+    cat, q, fuzzy = parse_cat_query("cat:gaming torrents?")
+    assert cat == "gaming"
+    assert q == "torrents"
+    assert fuzzy is True
+
+
+def test_parse_cat_query_no_fuzzy():
+    from src.search import parse_cat_query
+    cat, q, fuzzy = parse_cat_query("torrents")
+    assert cat is None
+    assert q == "torrents"
+    assert fuzzy is False
+
+
+def test_parse_cat_query_double_question():
+    from src.search import parse_cat_query
+    cat, q, fuzzy = parse_cat_query("torrents??")
+    assert q == "torrents"
+    assert fuzzy is True
 
 
 def test_starred_results_before_unstarred():

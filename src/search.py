@@ -55,10 +55,12 @@ def search(
     return results[:limit]
 
 
-def parse_cat_query(query: str) -> Tuple[Optional[str], str]:
-    if query.startswith("cat:"):
-        parts = query[4:].split(None, 1)
+def parse_cat_query(query: str) -> Tuple[Optional[str], str, bool]:
+    fuzzy = query.endswith("?")
+    q = query.rstrip("?")
+    if q.startswith("cat:"):
+        parts = q[4:].split(None, 1)
         cat = parts[0] if parts else ""
         rest = parts[1] if len(parts) > 1 else ""
-        return cat, rest
-    return None, query
+        return cat, rest, fuzzy
+    return None, q, fuzzy

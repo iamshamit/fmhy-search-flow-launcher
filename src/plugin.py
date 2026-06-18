@@ -165,7 +165,7 @@ class FMHYSearch(FlowLauncher):
                 lambda msg: FlowLauncherAPI.show_msg("FMHY Search", msg, ICON)
             )
 
-        cat_filter, search_query = parse_cat_query(query)
+        cat_filter, search_query, fuzzy = parse_cat_query(query)
 
         if not search_query:
             pool = entries
