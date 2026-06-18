@@ -88,8 +88,14 @@ def parse_cat_query(query: str) -> Tuple[Optional[str], str, bool]:
     fuzzy = query.endswith("?")
     q = query.rstrip("?")
     if q.startswith("cat:"):
-        parts = q[4:].split(None, 1)
+        rest = q[4:]
+        # Quoted multi-word category: cat:"Anime Streaming" search term
+        if rest.startswith('"'):
+            end = rest.find('"', 1)
+            if end != -1:
+                return rest[1:end], rest[end + 1:].strip(), fuzzy
+        parts = rest.split(None, 1)
         cat = parts[0] if parts else ""
-        rest = parts[1] if len(parts) > 1 else ""
-        return cat, rest, fuzzy
+        search = parts[1] if len(parts) > 1 else ""
+        return cat, search, fuzzy
     return None, q, fuzzy

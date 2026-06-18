@@ -218,6 +218,22 @@ def test_keyword_search_ranking():
     assert titles.index("MediaHub") < titles.index("VideoApp")
 
 
+def test_parse_cat_query_quoted_multiword():
+    from src.search import parse_cat_query
+    cat, q, fuzzy = parse_cat_query('cat:"Anime Streaming" torrents')
+    assert cat == "Anime Streaming"
+    assert q == "torrents"
+    assert fuzzy is False
+
+
+def test_parse_cat_query_quoted_no_search():
+    from src.search import parse_cat_query
+    cat, q, fuzzy = parse_cat_query('cat:"Anime Streaming" ')
+    assert cat == "Anime Streaming"
+    assert q == ""
+    assert fuzzy is False
+
+
 def test_keyword_search_non_english_last():
     from src.search import keyword_search
     results = keyword_search("streaming", SAMPLE_ENTRIES)

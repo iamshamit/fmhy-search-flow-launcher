@@ -353,7 +353,8 @@ class FMHYSearch(FlowLauncher):
         FlowLauncherAPI.change_query(raw_query.rstrip("?") + "?", requery=True)
 
     def select_category(self, name: str):
-        FlowLauncherAPI.change_query(f"cat:{name} ", requery=True)
+        quoted = f'"{name}"' if ' ' in name else name
+        FlowLauncherAPI.change_query(f"cat:{quoted} ", requery=True)
 
     def _cmd_favorites(self):
         favs = get_favorites()

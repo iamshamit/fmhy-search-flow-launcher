@@ -13,6 +13,8 @@ _EXTRA_LINKS = re.compile(r'^[,\s]*(?:\[[^\]]*\]\([^)]*\)[,\s]*)+')
 _MD_LINK = re.compile(r'\[([^\]]+)\]\([^)]+\)')
 # Matches a single comma-separated co-listed resource link at the start of a tail string
 _EXTRA_LINK_ITEM = re.compile(r'^[,\s]+\[([^\]]+)\]\((https?://[^)]+)\)')
+# Numbered mirror links like [2], [3] — not real tool names
+_NUMERIC_TITLE = re.compile(r'^\d+$')
 
 
 def _clean_description(raw: str) -> str:
@@ -67,12 +69,15 @@ def parse_markdown(markdown: str) -> List[Dict]:
             entries.append(_make_entry(title, url))
 
             # Extract additional co-listed resource links (e.g. ", [Raycast](url), [FlowLauncher](url)")
+            # Skip numbered mirror links like [2], [3] which are alternate URLs, not separate tools
             tail = raw_tail
             while True:
                 extra = _EXTRA_LINK_ITEM.match(tail)
                 if not extra:
                     break
-                entries.append(_make_entry(extra.group(1).strip(), extra.group(2).strip()))
+                extra_title = extra.group(1).strip()
+                if not _NUMERIC_TITLE.match(extra_title):
+                    entries.append(_make_entry(extra_title, extra.group(2).strip()))
                 tail = tail[extra.end():]
 
     return entries

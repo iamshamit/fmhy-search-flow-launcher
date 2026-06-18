@@ -111,3 +111,11 @@ def test_multi_link_line_creates_entry_per_link():
     assert titles == ["Wox", "FlowLauncher", "Raycast"]
     assert all(e["description"] == "Keystroke launchers" for e in entries)
     assert all(e["category"] == "System Tools" for e in entries)
+
+
+def test_numbered_mirror_links_not_indexed():
+    from src.indexer import parse_markdown
+    md = "# ► Streaming\n* [Miruro](https://miruro.tv/), [2](https://miruro.bz), [3](https://miruro.ru) - Anime streaming"
+    entries = parse_markdown(md)
+    assert len(entries) == 1
+    assert entries[0]["title"] == "Miruro"
