@@ -52,5 +52,25 @@ jobs:
         with:
           files: 'FMHY-Search-${{steps.version.outputs.prop}}.zip'
           tag_name: 'v${{steps.version.outputs.prop}}'
+          body: |
+            ## What's New in v${{steps.version.outputs.prop}}
+
+            ### New Features
+            - **Keyword search by default** — all words must match, giving precise results with no noise. Mirrors the FMHY website's own search behaviour.
+            - **Fuzzy search opt-in** — append `?` to any query for typo-tolerant matching (e.g. `fmhy qbittorent?` finds qBittorrent)
+            - **Category picker** — type `fmhy cat:` to browse all categories; select one and press Enter to filter your search to that category
+            - **Category + fuzzy composition** — filters and fuzzy mode work together: `fmhy cat:gaming emulater?`
+            - **Zero-results fuzzy fallback** — when keyword search finds nothing, press Enter on the prompt to instantly retry as a fuzzy search
+
+            ### Bug Fixes
+            - **~1,900 missing entries restored** — FMHY lines listing multiple tools (e.g. `[Wox], [FlowLauncher], [Raycast]`) now index every tool, not just the first. FlowLauncher, Raycast, Listary and many others were previously unsearchable.
+            - **Numbered mirror links removed** — `[2]`, `[3]`… alternate-URL entries no longer appear as junk results
+            - **Multi-word category filters** — `cat:"Anime Streaming"` correctly scopes results to that subcategory
+            - **Window stays open on action** — selecting a category or triggering fuzzy rewrite no longer closes Flow Launcher
+            - **Query rewrite includes keyword** — history reruns and category selections now correctly stay within the `fmhy` plugin context
+
+            ### Other
+            - 88 tests (up from 69 in v1.0.0)
+            - Updated README: `pm install FMHY Search by iamshamit` listed as primary installation method
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
