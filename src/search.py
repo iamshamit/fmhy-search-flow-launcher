@@ -25,6 +25,35 @@ def _is_non_english(entry: Dict) -> bool:
     return first_word in _LANGUAGE_NAMES
 
 
+def keyword_search(
+    query: str,
+    entries: List[Dict],
+    category_filter: Optional[str] = None,
+    limit: int = 20,
+) -> List[Dict]:
+    pool = entries
+    if category_filter:
+        cat_lower = category_filter.lower()
+        pool = [
+            e for e in entries
+            if cat_lower in e["category"].lower()
+            or cat_lower in e["subcategory"].lower()
+        ]
+    tokens = [t for t in query.lower().split() if len(t) > 1]
+    if not tokens:
+        return []
+
+    def _rank_key(entry: Dict) -> tuple:
+        non_en = _is_non_english(entry)
+        title_match = all(t in entry["title"].lower() for t in tokens)
+        starred = entry.get("starred", False)
+        return (non_en, not title_match, not starred)
+
+    results = [e for e in pool if all(t in e["search_text"].lower() for t in tokens)]
+    results.sort(key=_rank_key)
+    return results[:limit]
+
+
 def search(
     query: str,
     entries: List[Dict],

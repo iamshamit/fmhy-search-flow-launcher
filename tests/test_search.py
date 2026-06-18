@@ -135,3 +135,93 @@ def test_is_non_english_detection():
     assert _is_non_english({"category": "Torrenting"}) is False
     assert _is_non_english({"category": "Antivirus / Anti-Malware"}) is False
     assert _is_non_english({"category": "Privacy / Security"}) is False
+
+
+def test_keyword_search_all_tokens_match():
+    from src.search import keyword_search
+    results = keyword_search("bittorrent client", SAMPLE_ENTRIES)
+    assert any(r["title"] == "qBittorrent" for r in results)
+
+
+def test_keyword_search_partial_no_match():
+    from src.search import keyword_search
+    results = keyword_search("bittorrent zzznomatch", SAMPLE_ENTRIES)
+    assert results == []
+
+
+def test_keyword_search_short_tokens_ignored():
+    from src.search import keyword_search
+    results = keyword_search("a b", SAMPLE_ENTRIES)
+    assert results == []
+
+
+def test_keyword_search_empty_entries():
+    from src.search import keyword_search
+    assert keyword_search("torrent", []) == []
+
+
+def test_keyword_search_limit_respected():
+    from src.search import keyword_search
+    large = SAMPLE_ENTRIES * 20
+    results = keyword_search("torrent", large, limit=3)
+    assert len(results) <= 3
+
+
+def test_keyword_search_ranking():
+    from src.search import keyword_search
+    entries = [
+        # tier 3: starred, title no match (description/category match)
+        {
+            "title": "MediaHub",
+            "url": "https://a.com",
+            "category": "Tools",
+            "subcategory": "",
+            "description": "watch streaming",
+            "search_text": "MediaHub Tools  watch streaming",
+            "starred": True,
+        },
+        # tier 2: unstarred, title match
+        {
+            "title": "StreamFree",
+            "url": "https://b.com",
+            "category": "Tools",
+            "subcategory": "",
+            "description": "free stuff",
+            "search_text": "StreamFree Tools  free stuff",
+            "starred": False,
+        },
+        # tier 4: unstarred, title no match
+        {
+            "title": "VideoApp",
+            "url": "https://c.com",
+            "category": "Tools",
+            "subcategory": "",
+            "description": "for streaming",
+            "search_text": "VideoApp Tools  for streaming",
+            "starred": False,
+        },
+        # tier 1: starred, title match
+        {
+            "title": "StreamPro",
+            "url": "https://d.com",
+            "category": "Tools",
+            "subcategory": "",
+            "description": "the best",
+            "search_text": "StreamPro Tools  the best",
+            "starred": True,
+        },
+    ]
+    results = keyword_search("stream", entries)
+    titles = [r["title"] for r in results]
+    assert titles.index("StreamPro") < titles.index("StreamFree")
+    assert titles.index("StreamFree") < titles.index("MediaHub")
+    assert titles.index("MediaHub") < titles.index("VideoApp")
+
+
+def test_keyword_search_non_english_last():
+    from src.search import keyword_search
+    results = keyword_search("streaming", SAMPLE_ENTRIES)
+    non_en = [i for i, r in enumerate(results) if not r["category"].isascii()]
+    en = [i for i, r in enumerate(results) if r["category"].isascii()]
+    if non_en and en:
+        assert min(non_en) > max(en)
