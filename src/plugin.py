@@ -140,6 +140,31 @@ def _build_fmhy_url(category: str, subcategory: str) -> str:
     return f"https://fmhy.net/{page}#{slug}"
 
 
+def _build_cat_results(partial: str, entries: list, icon: str) -> list:
+    seen = set()
+    cats = []
+    for e in entries:
+        for name in (e["category"], e.get("subcategory", "")):
+            if name and name not in seen:
+                if not partial or partial.lower() in name.lower():
+                    seen.add(name)
+                    cats.append(name)
+    cats.sort()
+    if not cats:
+        return [{"Title": f"No categories matching '{partial}'",
+                 "SubTitle": "Try a different term",
+                 "IcoPath": icon}]
+    return [
+        {
+            "Title": name,
+            "SubTitle": f"Press Enter to search within {name}",
+            "IcoPath": icon,
+            "JsonRPCAction": {"method": "select_category", "parameters": [name]},
+        }
+        for name in cats[:20]
+    ]
+
+
 class FMHYSearch(FlowLauncher):
 
     def query(self, query: str) -> list:
@@ -168,6 +193,8 @@ class FMHYSearch(FlowLauncher):
         cat_filter, search_query, fuzzy = parse_cat_query(query)
 
         if not search_query:
+            if query.startswith("cat:") and " " not in query[4:]:
+                return self._cmd_cat_picker(query[4:].rstrip("?"), entries)
             pool = entries
             if cat_filter:
                 cat_lower = cat_filter.lower()
@@ -325,6 +352,9 @@ class FMHYSearch(FlowLauncher):
     def fuzzy_rewrite(self, raw_query: str):
         FlowLauncherAPI.change_query(raw_query.rstrip("?") + "?", requery=True)
 
+    def select_category(self, name: str):
+        FlowLauncherAPI.change_query(f"cat:{name} ", requery=True)
+
     def _cmd_favorites(self):
         favs = get_favorites()
         if not favs:
@@ -332,3 +362,6 @@ class FMHYSearch(FlowLauncher):
                      "SubTitle": "Open context menu on any result to add a favorite",
                      "IcoPath": ICON}]
         return [self._make_result(e) for e in favs]
+
+    def _cmd_cat_picker(self, partial: str, entries: list) -> list:
+        return _build_cat_results(partial, entries, ICON)

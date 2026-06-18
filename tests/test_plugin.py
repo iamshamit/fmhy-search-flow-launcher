@@ -46,3 +46,37 @@ def test_slug_spaces_become_hyphens():
 def test_slug_slash_removed():
     url = _build_fmhy_url("Adblocking", "DNS Adblocking")
     assert "/" not in url.split("#")[1]
+
+
+def test_build_cat_results_empty_partial_shows_all():
+    from src.plugin import _build_cat_results
+    from tests.conftest import SAMPLE_ENTRIES
+    results = _build_cat_results("", SAMPLE_ENTRIES, "icon.png")
+    titles = [r["Title"] for r in results]
+    assert "Torrenting" in titles
+    assert "Streaming" in titles
+
+
+def test_build_cat_results_filters_by_partial():
+    from src.plugin import _build_cat_results
+    from tests.conftest import SAMPLE_ENTRIES
+    results = _build_cat_results("stream", SAMPLE_ENTRIES, "icon.png")
+    titles = [r["Title"] for r in results]
+    assert all("stream" in t.lower() for t in titles)
+    assert len(titles) >= 1
+
+
+def test_build_cat_results_no_match():
+    from src.plugin import _build_cat_results
+    from tests.conftest import SAMPLE_ENTRIES
+    results = _build_cat_results("zzznomatch", SAMPLE_ENTRIES, "icon.png")
+    assert len(results) == 1
+    assert "No categories" in results[0]["Title"]
+
+
+def test_build_cat_results_action_method():
+    from src.plugin import _build_cat_results
+    from tests.conftest import SAMPLE_ENTRIES
+    results = _build_cat_results("torrent", SAMPLE_ENTRIES, "icon.png")
+    assert results[0]["JsonRPCAction"]["method"] == "select_category"
+    assert isinstance(results[0]["JsonRPCAction"]["parameters"][0], str)
