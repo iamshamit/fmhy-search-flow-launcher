@@ -72,16 +72,28 @@ def search(
     if not pool:
         return []
 
+    # Two-pass fuzzy: title first (catches typo'd tool names), then search_text for
+    # anything the title pass missed (catches category/description matches).
+    titles = [e["title"] for e in pool]
+    title_matches = process.extract(
+        query, titles, scorer=fuzz.WRatio, limit=limit * 3, score_cutoff=60,
+        processor=utils.default_process,
+    )
+    seen = {idx for _, _, idx in title_matches}
+
     search_texts = [e["search_text"] for e in pool]
-    # Fetch 3× the limit so re-ranking has enough English candidates to fill the final list
-    matches = process.extract(
+    text_matches = process.extract(
         query, search_texts, scorer=fuzz.WRatio, limit=limit * 3, score_cutoff=60,
         processor=utils.default_process,
     )
-    results = [pool[idx] for _, _, idx in matches]
+
+    # Title hits first, then search_text hits not already found
+    ordered = [pool[idx] for _, _, idx in title_matches]
+    ordered += [pool[idx] for _, _, idx in text_matches if idx not in seen]
+
     # Re-rank: starred English → unstarred English → non-English (stable sort preserves score order within groups)
-    results.sort(key=lambda e: (_is_non_english(e), not e.get("starred", False)))
-    return results[:limit]
+    ordered.sort(key=lambda e: (_is_non_english(e), not e.get("starred", False)))
+    return ordered[:limit]
 
 
 def parse_cat_query(query: str) -> Tuple[Optional[str], str, bool]:
