@@ -163,7 +163,7 @@ def _build_cat_results(partial: str, entries: list, icon: str) -> list:
             "Title": name,
             "SubTitle": f"Press Enter to search within {name}",
             "IcoPath": icon,
-            "JsonRPCAction": {"method": "select_category", "parameters": [name]},
+            "JsonRPCAction": {"method": "select_category", "parameters": [name], "dontHideAfterAction": True},
         }
         for name in cats[:20]
     ]
@@ -225,7 +225,7 @@ class FMHYSearch(FlowLauncher):
                 "Title": f"No results for '{search_query}' — press Enter to try fuzzy search",
                 "SubTitle": "Searches with typo tolerance",
                 "IcoPath": ICON,
-                "JsonRPCAction": {"method": "fuzzy_rewrite", "parameters": [query]},
+                "JsonRPCAction": {"method": "fuzzy_rewrite", "parameters": [query], "dontHideAfterAction": True},
             }]
         return [self._make_result(e) for e in results]
 
@@ -346,7 +346,7 @@ class FMHYSearch(FlowLauncher):
         return [
             {"Title": term, "SubTitle": "Press Enter to search again",
              "IcoPath": ICON,
-             "JsonRPCAction": {"method": "rerun_history", "parameters": [term]}}
+             "JsonRPCAction": {"method": "rerun_history", "parameters": [term], "dontHideAfterAction": True}}
             for term in history
         ]
 
