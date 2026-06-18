@@ -4,8 +4,12 @@ import subprocess
 import webbrowser
 from pathlib import Path
 
+import json as _json
+
 _plugin_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_plugin_root / "lib"))
+
+_KEYWORD = _json.loads((_plugin_root / "plugin.json").read_text()).get("ActionKeyword", "fmhy")
 
 from flowlauncher import FlowLauncher
 from flowlauncher import FlowLauncherAPI
@@ -347,14 +351,14 @@ class FMHYSearch(FlowLauncher):
         ]
 
     def rerun_history(self, term: str):
-        FlowLauncherAPI.change_query(term, requery=True)
+        FlowLauncherAPI.change_query(f"{_KEYWORD} {term}", requery=True)
 
     def fuzzy_rewrite(self, raw_query: str):
-        FlowLauncherAPI.change_query(raw_query.rstrip("?") + "?", requery=True)
+        FlowLauncherAPI.change_query(f"{_KEYWORD} {raw_query.rstrip('?')}?", requery=True)
 
     def select_category(self, name: str):
         quoted = f'"{name}"' if ' ' in name else name
-        FlowLauncherAPI.change_query(f"cat:{quoted} ", requery=True)
+        FlowLauncherAPI.change_query(f"{_KEYWORD} cat:{quoted} ", requery=True)
 
     def _cmd_favorites(self):
         favs = get_favorites()
