@@ -1,6 +1,6 @@
 # FMHY Search — Flow Launcher Plugin
 
-Search the [Free Media Heck Yeah](https://fmhy.net) database directly from Flow Launcher. Results are ranked by relevance, with curated (⭐) picks and English results always shown first.
+Search the [Free Media Heck Yeah](https://fmhy.net) database directly from Flow Launcher. 15,000+ entries indexed locally — no internet needed to search.
 
 ---
 
@@ -13,106 +13,131 @@ Search the [Free Media Heck Yeah](https://fmhy.net) database directly from Flow 
 
 ## Installation
 
-### Option 1 — Manual install from release zip
+### Recommended — Flow Launcher Plugin Manager
+
+Open Flow Launcher and run:
+
+```
+pm install FMHY Search by iamshamit
+```
+
+Flow Launcher will download, install, and activate the plugin automatically.
+
+### Manual — Release zip
 
 1. Download the latest `FMHY-Search-x.x.x.zip` from the [Releases](../../releases) page
-2. Extract the folder into:
+2. Extract into:
    ```
    %APPDATA%\FlowLauncher\Plugins\
    ```
-   so the structure is `…\Plugins\FMHY Search-1.0.0\main.py`
+   so the path is `…\Plugins\FMHY Search-1.0.0\main.py`
 3. Restart Flow Launcher
 
-### Option 2 — Build from source
+### Build from source
 
 ```bat
 git clone https://github.com/iamshamit/fmhy-search-flow-launcher
 cd fmhy-search-flow-launcher
-
-:: Install runtime dependencies into lib\
 pip install -r requirements.txt -t lib\
-
-:: Copy the folder to Flow Launcher plugins directory
 xcopy /E /I . "%APPDATA%\FlowLauncher\Plugins\FMHY Search-1.0.0"
-
-:: Restart Flow Launcher
 ```
+
+Restart Flow Launcher after copying.
 
 > **First run:** type `fmhy` and press Enter on the prompt to download and build the index (~2 MB, ~5 seconds). All subsequent searches are instant and fully local.
 
 ---
 
-## Features
+## Usage
 
 ### Search
 
+Type `fmhy` followed by your query. Search is **keyword-based by default** — all words must match — giving precise, noise-free results.
+
 | What you type | What happens |
 |---|---|
-| `fmhy torrent client` | Fuzzy search across all 14,000+ FMHY entries |
-| `fmhy anime streaming` | Find anime streaming sites |
-| `fmhy qbittorrent` | Match by title, even with typos |
-| `fmhy flac music download` | Match by description and keywords |
+| `fmhy torrent client` | Keyword search — both words must appear in the result |
+| `fmhy cat:audio flac` | Keyword search within the Audio category |
+| `fmhy qbittorrent?` | **Fuzzy search** — finds results even with typos |
+| `fmhy anime streaming?` | Fuzzy search for broader coverage |
 
-- **Fuzzy matching** — finds results even with typos or partial words (powered by [rapidfuzz](https://github.com/maxbachmann/RapidFuzz))
-- **Smart ranking** — ⭐ curated picks appear first, then regular English results, then non-English results
-- **15,000+ entries** indexed locally — no internet connection needed to search
+**Ranking** within keyword results:
+
+1. ⭐ Starred entries where query appears in the **title**
+2. Unstarred entries where query appears in the **title**
+3. ⭐ Starred entries where query appears in description or category
+4. Unstarred entries where query appears in description or category
+5. Non-English results last
+
+If a keyword search returns no results, a prompt appears — press **Enter** to retry as a fuzzy search automatically.
+
+### Fuzzy Search
+
+Append `?` to your query for typo-tolerant, approximate matching:
+
+```
+fmhy qbittorent?       → finds qBittorrent despite the typo
+fmhy free moovies?     → broader match when exact keywords miss
+```
+
+Works with category filters too: `fmhy cat:gaming emulater?`
 
 ### Category Filter
 
-Narrow results to a specific topic before searching:
+Narrow results to a specific topic:
 
 ```
-fmhy cat:anime streaming
-fmhy cat:audio flac
-fmhy cat:privacy vpn
-fmhy cat:ai coding
-fmhy cat:torrenting clients
+fmhy cat:              → browse all categories
+fmhy cat:audio         → browse Audio entries (or pick from the list)
+fmhy cat:audio flac    → search "flac" within Audio
+fmhy cat:privacy vpn?  → fuzzy search "vpn" within Privacy
 ```
 
-Matches against both the category and subcategory of each entry. Partial matches work (`cat:torrent` matches "Torrenting", "Torrent Clients", etc.).
+Typing `fmhy cat:` shows a live category picker — select one and press **Enter** to filter, then type your search term.
 
 ### Commands
 
 | Command | Description |
 |---|---|
-| `fmhy update` | Force re-download and rebuild the index |
+| `fmhy update` | Re-download and rebuild the index |
 | `fmhy random` | Open a random FMHY resource in your browser |
-| `fmhy latest` | Show recently starred entries from the latest monthly FMHY update |
+| `fmhy latest` | Show recently starred entries from the latest monthly update |
 | `fmhy history` | List your last 20 searches — select one to re-run it |
 | `fmhy fav` | List your saved favorites — select one to open it |
 
-### Context Menu Actions
+### Context Menu
 
-Open the context menu with **Shift+Enter** or right-click on any result:
+Open with **Shift+Enter** or right-click on any result:
 
 | Action | Description |
 |---|---|
 | **Copy URL** | Copy the resource link to clipboard |
 | **Add / Remove Favorite** | Toggle the entry in your favorites list |
-| **View section on FMHY.net** | Open the exact section of fmhy.net where this entry lives (e.g. `fmhy.net/video#anime-streaming`) |
+| **View section on FMHY.net** | Open the exact section on fmhy.net (e.g. `fmhy.net/video#anime-streaming`) |
 
 ### Result Icons
 
-Each result shows the favicon of the linked site. Favicons are fetched asynchronously on first display and cached permanently — there is no delay to search results.
+Each result shows the favicon of the linked site, fetched asynchronously on first display and cached permanently — no delay to search results.
 
 ### Auto-Update
 
-The plugin silently checks the FMHY RSS feed in the background on the 1st of each month. If a new update is published, the index rebuilds automatically and you get a notification when it's done. You never have to run `fmhy update` manually unless you want to force a refresh.
+The plugin silently checks the FMHY RSS feed in the background on the 1st of each month. If a new update is available, the index rebuilds automatically. You never need to run `fmhy update` manually unless you want to force a refresh.
 
 ---
 
 ## How It Works
 
-1. **Index** — on first run (or `fmhy update`), the plugin fetches the full FMHY database from `api.fmhy.net/single-page` (~2 MB of markdown) and parses it into a local JSON index stored in `data\search_index.json`
-2. **Search** — every query runs entirely against the local index using rapidfuzz's `WRatio` scorer with a score cutoff of 60. No network request is made during search
-3. **Ranking** — results are re-ranked after fuzzy scoring: ⭐ starred English entries → unstarred English entries → non-English entries
-4. **Auto-update** — on the first query on the 1st of each month, the plugin fetches the RSS feed in a background thread. If the latest post's month/year differs from what was last indexed, a full rebuild is triggered
+1. **Index** — on first run, the plugin fetches the full FMHY database from `api.fmhy.net/single-page` (~2 MB of Markdown) and parses it into a local JSON index at `data\search_index.json`
+2. **Keyword search** — queries run entirely against the local index using substring matching; all query tokens must appear in an entry's title, description, or category. No network request during search.
+3. **Fuzzy search** — append `?` to your query to use rapidfuzz's `WRatio` scorer (cutoff 60) for typo-tolerant matching
+4. **Ranking** — keyword results are sorted by title relevance and starred status; non-English entries are always last
+5. **Auto-update** — on the first query on the 1st of each month, the plugin checks the RSS feed in a background thread and rebuilds if there's a new release
 
 ---
 
 ## Data Files
 
-All plugin data is stored under the plugin folder in `data\`:
+All plugin data is stored in `data\` under the plugin folder:
 
 | File | Purpose |
 |---|---|
@@ -128,14 +153,11 @@ All plugin data is stored under the plugin folder in `data\`:
 ## Development
 
 ```bat
-:: Install dev dependencies (pytest etc.)
 pip install -r requirements-dev.txt
-
-:: Run tests
 python -m pytest tests/ -v
 ```
 
-69 tests cover the indexer, search ranking, updater, commands, cache, and URL generation.
+84 tests cover the indexer, search ranking, updater, commands, cache, and URL generation.
 
 ### Project Structure
 
@@ -146,8 +168,8 @@ FMHY Search/
 ├── requirements.txt     # Runtime deps (requests, rapidfuzz)
 ├── requirements-dev.txt # Dev deps (pytest)
 ├── src/
-│   ├── plugin.py        # Main plugin class — routes queries and commands
-│   ├── search.py        # Fuzzy search + result ranking
+│   ├── plugin.py        # Query routing, commands, and RPC handlers
+│   ├── search.py        # Keyword search, fuzzy search, and result ranking
 │   ├── indexer.py       # Parses FMHY markdown into entry dicts
 │   ├── updater.py       # Index builder + RSS-gated auto-update
 │   ├── commands.py      # random, latest, history, favorites logic
@@ -161,13 +183,6 @@ FMHY Search/
 
 ---
 
-## Building a Release Zip
+## Release
 
-The release is built automatically by `.github/workflows/Publish Release.yml` on every push to `master`, using `windows-latest` and Python 3.11 so the bundled wheels match the embedded CPython that Flow Launcher ships. To build locally:
-
-```bat
-rmdir /s /q lib
-pip install -r requirements.txt -t lib\
-```
-
-Then zip the folder (excluding `.git\`, `tests\`, `docs\`, `data\`, `__pycache__\`, and `requirements-dev.txt`) and submit to the Flow Launcher plugin store.
+CI (`.github/workflows/Publish Release.yml`) triggers on every push to `master`. It installs runtime deps into `lib\`, zips the plugin, and publishes a GitHub Release. Bump `Version` in `plugin.json` to cut a new release.
