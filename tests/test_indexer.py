@@ -101,3 +101,13 @@ def test_all_entries_have_starred_field():
     from src.indexer import parse_markdown
     entries = parse_markdown(SAMPLE_MARKDOWN)
     assert all("starred" in e for e in entries)
+
+
+def test_multi_link_line_creates_entry_per_link():
+    from src.indexer import parse_markdown
+    md = "# ► System Tools\n* [Wox](https://wox.com/), [FlowLauncher](https://flowlauncher.com/), [Raycast](https://raycast.com/) - Keystroke launchers"
+    entries = parse_markdown(md)
+    titles = [e["title"] for e in entries]
+    assert titles == ["Wox", "FlowLauncher", "Raycast"]
+    assert all(e["description"] == "Keystroke launchers" for e in entries)
+    assert all(e["category"] == "System Tools" for e in entries)

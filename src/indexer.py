@@ -11,6 +11,8 @@ _ENTRY = re.compile(r'^\*\s+\[([^\]]+)\]\((https?://[^)]+)\)\s*(.*)')
 _EXTRA_LINKS = re.compile(r'^[,\s]*(?:\[[^\]]*\]\([^)]*\)[,\s]*)+')
 # Strips remaining inline markdown links: [text](url) → text
 _MD_LINK = re.compile(r'\[([^\]]+)\]\([^)]+\)')
+# Matches a single comma-separated co-listed resource link at the start of a tail string
+_EXTRA_LINK_ITEM = re.compile(r'^[,\s]+\[([^\]]+)\]\((https?://[^)]+)\)')
 
 
 def _clean_description(raw: str) -> str:
@@ -48,16 +50,29 @@ def parse_markdown(markdown: str) -> List[Dict]:
         if m:
             title = m.group(1).strip()
             url = m.group(2).strip()
-            description = _clean_description(m.group(3))
-            search_text = f"{title} {current_category} {current_subcategory} {description}"
-            entries.append({
-                "title": title,
-                "url": url,
-                "category": current_category,
-                "subcategory": current_subcategory,
-                "description": description,
-                "search_text": search_text,
-                "starred": starred,
-            })
+            raw_tail = m.group(3)
+            description = _clean_description(raw_tail)
+
+            def _make_entry(t, u):
+                return {
+                    "title": t,
+                    "url": u,
+                    "category": current_category,
+                    "subcategory": current_subcategory,
+                    "description": description,
+                    "search_text": f"{t} {current_category} {current_subcategory} {description}",
+                    "starred": starred,
+                }
+
+            entries.append(_make_entry(title, url))
+
+            # Extract additional co-listed resource links (e.g. ", [Raycast](url), [FlowLauncher](url)")
+            tail = raw_tail
+            while True:
+                extra = _EXTRA_LINK_ITEM.match(tail)
+                if not extra:
+                    break
+                entries.append(_make_entry(extra.group(1).strip(), extra.group(2).strip()))
+                tail = tail[extra.end():]
 
     return entries
