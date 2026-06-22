@@ -11,6 +11,7 @@ from src.cache import load_json, save_json, INDEX_FILE, META_FILE, RSS_URL, get_
 from src.indexer import parse_markdown
 
 SINGLE_PAGE_URL = "https://api.fmhy.net/single-page"
+SINGLE_PAGE_URL_HTTP = "http://api.fmhy.net/single-page"
 
 # Keep module-level references so monkeypatching updater.INDEX_FILE /
 # updater.META_FILE works in tests. Functions must read these via the
@@ -40,12 +41,14 @@ def should_check_rss() -> bool:
     return meta.get("last_rss_check_date") != today.isoformat()
 
 
-def _try_fetch(url: str, verify: bool = True) -> Optional[str]:
+def _try_fetch(url: str, timeout: int = 30, verify: bool = True) -> Optional[str]:
     try:
-        resp = requests.get(url, timeout=30, verify=verify)
+        resp = requests.get(url, timeout=timeout, verify=verify)
         resp.raise_for_status()
         return resp.text
     except requests.exceptions.SSLError:
+        return None
+    except requests.exceptions.RequestException:
         return None
 
 
@@ -55,8 +58,11 @@ def build_index() -> Tuple[bool, str]:
         log.info("Fetching FMHY single-page API")
         text = _try_fetch(SINGLE_PAGE_URL, verify=True)
         if text is None:
-            log.info("HTTPS verification failed, retrying without verification")
+            log.info("HTTPS failed, retrying without SSL verification")
             text = _try_fetch(SINGLE_PAGE_URL, verify=False)
+        if text is None:
+            log.info("HTTPS unavailable, retrying via plain HTTP")
+            text = _try_fetch(SINGLE_PAGE_URL_HTTP, timeout=30, verify=False)
         if text is None:
             return False, "Update failed: could not reach api.fmhy.net — check your network or proxy settings"
         entries = parse_markdown(text)
