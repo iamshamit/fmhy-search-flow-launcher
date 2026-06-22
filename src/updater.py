@@ -1,4 +1,5 @@
 import sys
+import socket
 import threading
 import requests
 import xml.etree.ElementTree as ET
@@ -41,6 +42,15 @@ def should_check_rss() -> bool:
     return meta.get("last_rss_check_date") != today.isoformat()
 
 
+def _try_urllib(url: str, timeout: int = 30) -> Optional[str]:
+    import urllib.request
+    try:
+        resp = urllib.request.urlopen(url, timeout=timeout)
+        return resp.read().decode("utf-8")
+    except Exception:
+        return None
+
+
 def _try_fetch(url: str, timeout: int = 30, verify: bool = True) -> Optional[str]:
     try:
         resp = requests.get(url, timeout=timeout, verify=verify)
@@ -64,7 +74,16 @@ def build_index() -> Tuple[bool, str]:
             log.info("HTTPS unavailable, retrying via plain HTTP")
             text = _try_fetch(SINGLE_PAGE_URL_HTTP, timeout=30, verify=False)
         if text is None:
-            return False, "Update failed: could not reach api.fmhy.net — check your network or proxy settings"
+            log.info("All requests methods failed, trying urllib as fallback")
+            text = _try_urllib(SINGLE_PAGE_URL, timeout=30)
+        if text is None:
+            log.info("All fetch attempts failed — api.fmhy.net unreachable")
+            try:
+                ip = socket.gethostbyname("api.fmhy.net")
+                log.info(f"api.fmhy.net resolves to {ip}")
+            except Exception as e:
+                log.info(f"DNS resolution failed: {e}")
+            return False, "Update failed: could not reach api.fmhy.net — try disabling your VPN, antivirus, or proxy"
         entries = parse_markdown(text)
         if not entries:
             return False, "Parsed 0 entries — index not updated"
