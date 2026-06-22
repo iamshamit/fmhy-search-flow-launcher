@@ -40,13 +40,26 @@ def should_check_rss() -> bool:
     return meta.get("last_rss_check_date") != today.isoformat()
 
 
+def _try_fetch(url: str, verify: bool = True) -> Optional[str]:
+    try:
+        resp = requests.get(url, timeout=30, verify=verify)
+        resp.raise_for_status()
+        return resp.text
+    except requests.exceptions.SSLError:
+        return None
+
+
 def build_index() -> Tuple[bool, str]:
     log = get_logger()
     try:
         log.info("Fetching FMHY single-page API")
-        resp = requests.get(SINGLE_PAGE_URL, timeout=30)
-        resp.raise_for_status()
-        entries = parse_markdown(resp.text)
+        text = _try_fetch(SINGLE_PAGE_URL, verify=True)
+        if text is None:
+            log.info("HTTPS verification failed, retrying without verification")
+            text = _try_fetch(SINGLE_PAGE_URL, verify=False)
+        if text is None:
+            return False, "Update failed: could not reach api.fmhy.net — check your network or proxy settings"
+        entries = parse_markdown(text)
         if not entries:
             return False, "Parsed 0 entries — index not updated"
         save_json(_mod.INDEX_FILE, entries)

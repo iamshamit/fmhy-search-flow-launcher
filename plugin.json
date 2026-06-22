@@ -4,7 +4,7 @@
     "Name": "FMHY Search",
     "Description": "Search the Free Media Heck Yeah database",
     "Author": "iamshamit",
-    "Version": "1.1.0",
+    "Version": "1.1.1",
     "Language": "python",
     "Website": "https://github.com/iamshamit/fmhy-search-flow-launcher",
     "IcoPath": "icons\\fmhy.png",
