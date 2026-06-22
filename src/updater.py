@@ -1,7 +1,9 @@
 import sys
 import socket
 import threading
+import warnings
 import requests
+import urllib3
 import xml.etree.ElementTree as ET
 from datetime import date
 from email.utils import parsedate_to_datetime
@@ -13,6 +15,9 @@ from src.indexer import parse_markdown
 
 SINGLE_PAGE_URL = "https://api.fmhy.net/single-page"
 SINGLE_PAGE_URL_HTTP = "http://api.fmhy.net/single-page"
+
+# Suppress urllib3 warnings that leak to stderr and crash Flow Launcher's JSON-RPC parser
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Keep module-level references so monkeypatching updater.INDEX_FILE /
 # updater.META_FILE works in tests. Functions must read these via the
@@ -62,6 +67,21 @@ def _try_fetch(url: str, timeout: int = 30, verify: bool = True) -> Optional[str
         return None
 
 
+_BLOCK_KEYWORDS = [
+    "block.charter-prod.hosted.cujo.io",
+    "blocked", "blockpage", "content not available",
+    "this site has been blocked",
+]
+
+
+def _is_block_page(text: str) -> Optional[str]:
+    lower = text.lower()
+    for kw in _BLOCK_KEYWORDS:
+        if kw in lower:
+            return kw
+    return None
+
+
 def build_index() -> Tuple[bool, str]:
     log = get_logger()
     try:
@@ -76,6 +96,11 @@ def build_index() -> Tuple[bool, str]:
         if text is None:
             log.info("All requests methods failed, trying urllib as fallback")
             text = _try_urllib(SINGLE_PAGE_URL, timeout=30)
+        if text is not None:
+            blocked = _is_block_page(text)
+            if blocked:
+                log.info(f"Request was blocked (detected: {blocked})")
+                return False, f"Update blocked by your ISP or firewall — {SINGLE_PAGE_URL} is not accessible on this network"
         if text is None:
             log.info("All fetch attempts failed — api.fmhy.net unreachable")
             try:
