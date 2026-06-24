@@ -230,8 +230,6 @@ class FMHYSearch(FlowLauncher):
         return [self._make_result(e) for e in results]
 
     def context_menu(self, data: list) -> list:
-        if not data or len(data) < 5:
-            return []
         url, title, category, description, subcategory = data
         fav_label = "Remove from Favorites" if is_favorite(url) else "Add to Favorites"
         fmhy_url = self._fmhy_section_url(category, subcategory)
