@@ -1,19 +1,19 @@
-# FMHY Search — Flow Launcher Plugin
+# FMHY Search - Flow Launcher Plugin
 
-Search the [Free Media Heck Yeah](https://fmhy.net) database directly from Flow Launcher. 15,000+ entries indexed locally — no internet needed to search.
+Search the [Free Media Heck Yeah](https://fmhy.net) database directly from Flow Launcher. 15,000+ entries indexed locally, no internet needed to search.
 
 ---
 
 ## Requirements
 
 - [Flow Launcher](https://www.flowlauncher.com/) 2.12 or later
-- Python 3.10+ (bundled with Flow Launcher — no separate install needed)
+- Python 3.10+ (bundled with Flow Launcher, no separate install needed)
 
 ---
 
 ## Installation
 
-### Recommended — Flow Launcher Plugin Manager
+### Recommended - Flow Launcher Plugin Manager
 
 Open Flow Launcher and run:
 
@@ -23,7 +23,7 @@ pm install FMHY Search by iamshamit
 
 Flow Launcher will download, install, and activate the plugin automatically.
 
-### Manual — Release zip
+### Manual - Release zip
 
 1. Download the latest `FMHY-Search-x.x.x.zip` from the [Releases](../../releases) page
 2. Extract into:
@@ -52,13 +52,13 @@ Restart Flow Launcher after copying.
 
 ### Search
 
-Type `fmhy` followed by your query. Search is **keyword-based by default** — all words must match — giving precise, noise-free results.
+Type `fmhy` followed by your query. Search is **keyword-based by default** (all words must match), giving precise, noise-free results.
 
 | What you type | What happens |
 |---|---|
-| `fmhy torrent client` | Keyword search — both words must appear in the result |
+| `fmhy torrent client` | Keyword search, both words must appear in the result |
 | `fmhy cat:audio flac` | Keyword search within the Audio category |
-| `fmhy qbittorrent?` | **Fuzzy search** — finds results even with typos |
+| `fmhy qbittorrent?` | **Fuzzy search**, finds results even with typos |
 | `fmhy anime streaming?` | Fuzzy search for broader coverage |
 
 **Ranking** within keyword results:
@@ -69,7 +69,7 @@ Type `fmhy` followed by your query. Search is **keyword-based by default** — a
 4. Unstarred entries where query appears in description or category
 5. Non-English results last
 
-If a keyword search returns no results, a prompt appears — press **Enter** to retry as a fuzzy search automatically.
+If a keyword search returns no results, a prompt appears; press **Enter** to retry as a fuzzy search automatically.
 
 ### Fuzzy Search
 
@@ -93,7 +93,7 @@ fmhy cat:audio flac    → search "flac" within Audio
 fmhy cat:privacy vpn?  → fuzzy search "vpn" within Privacy
 ```
 
-Typing `fmhy cat:` shows a live category picker — select one and press **Enter** to filter, then type your search term.
+Typing `fmhy cat:` shows a live category picker; select one and press **Enter** to filter, then type your search term.
 
 ### Commands
 
@@ -102,8 +102,8 @@ Typing `fmhy cat:` shows a live category picker — select one and press **Enter
 | `fmhy update` | Re-download and rebuild the index |
 | `fmhy random` | Open a random FMHY resource in your browser |
 | `fmhy latest` | Show recently starred entries from the latest monthly update |
-| `fmhy history` | List your last 20 searches — select one to re-run it |
-| `fmhy fav` | List your saved favorites — select one to open it |
+| `fmhy history` | List your last 20 searches; select one to re-run it |
+| `fmhy fav` | List your saved favorites; select one to open it |
 
 ### Context Menu
 
@@ -115,10 +115,6 @@ Open with **Shift+Enter** or right-click on any result:
 | **Add / Remove Favorite** | Toggle the entry in your favorites list |
 | **View section on FMHY.net** | Open the exact section on fmhy.net (e.g. `fmhy.net/video#anime-streaming`) |
 
-### Result Icons
-
-Each result shows the favicon of the linked site, fetched asynchronously on first display and cached permanently — no delay to search results.
-
 ### Auto-Update
 
 The plugin silently checks the FMHY RSS feed in the background on the 1st of each month. If a new update is available, the index rebuilds automatically. You never need to run `fmhy update` manually unless you want to force a refresh.
@@ -127,11 +123,11 @@ The plugin silently checks the FMHY RSS feed in the background on the 1st of eac
 
 ## How It Works
 
-1. **Index** — on first run, the plugin fetches the full FMHY database from `api.fmhy.net/single-page` (~2 MB of Markdown) and parses it into a local JSON index at `data\search_index.json`
-2. **Keyword search** — queries run entirely against the local index using substring matching; all query tokens must appear in an entry's title, description, or category. No network request during search.
-3. **Fuzzy search** — append `?` to your query to use rapidfuzz's `WRatio` scorer (cutoff 60) for typo-tolerant matching
-4. **Ranking** — keyword results are sorted by title relevance and starred status; non-English entries are always last
-5. **Auto-update** — on the first query on the 1st of each month, the plugin checks the RSS feed in a background thread and rebuilds if there's a new release
+1. **Index**: on first run, the plugin fetches the full FMHY database from `api.fmhy.net/single-page` (~2 MB of Markdown) and parses it into a local JSON index at `data\search_index.json`
+2. **Keyword search**: queries run entirely against the local index using substring matching; all query tokens must appear in an entry's title, description, or category. No network request during search.
+3. **Fuzzy search**: append `?` to your query to use rapidfuzz's `WRatio` scorer (cutoff 60) for typo-tolerant matching
+4. **Ranking**: keyword results are sorted by title relevance and starred status; non-English entries are always last
+5. **Auto-update**: on the first query on the 1st of each month, the plugin checks the RSS feed in a background thread and rebuilds if there's a new release
 
 ---
 
@@ -145,7 +141,6 @@ All plugin data is stored in `data\` under the plugin folder:
 | `meta.json` | Last RSS check timestamp and last-indexed month/year |
 | `history.json` | Your last 20 search terms |
 | `favorites.json` | Your bookmarked entries (keyed by URL) |
-| `favicons\` | Per-domain favicon PNGs cached to disk |
 | `fmhy_plugin.log` | Plugin log file for debugging |
 
 ---
